@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Green Button Viewer</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface2: #1c2330;
+      --border: #30363d;
+      --accent: #39d353;
+      --accent2: #58a6ff;
+      --warn: #f0b429;
+      --text: #e6edf3;
+      --muted: #7d8590;
+      --font-mono: 'Space Mono', monospace;
+      --font-body: 'DM Sans', sans-serif;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      padding: 1.25rem 2rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      background: var(--surface);
+    }
+
+    .logo {
+      width: 32px; height: 32px;
+      background: var(--accent);
+      border-radius: 6px;
+      display: grid; place-items: center;
+      flex-shrink: 0;
+    }
+
+    .logo svg { width: 18px; height: 18px; }
+
+    header h1 {
+      font-family: var(--font-mono);
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      color: var(--text);
+    }
+
+    header p {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-left: auto;
+    }
+
+    /* ── Main layout ── */
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 2rem;
+      gap: 1.5rem;
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    /* ── Drop zone ── */
+    #dropzone {
+      border: 2px dashed var(--border);
+      border-radius: 12px;
+      padding: 3rem 2rem;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      background: var(--surface);
+      position: relative;
+    }
+
+    #dropzone.drag-over {
+      border-color: var(--accent);
+      background: rgba(57, 211, 83, 0.05);
+    }
+
+    #dropzone input[type="file"] {
+      position: absolute; inset: 0;
+      opacity: 0; cursor: pointer;
+      width: 100%; height: 100%;
+    }
+
+    #dropzone .drop-icon {
+      font-size: 2.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    #dropzone h2 {
+      font-family: var(--font-mono);
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 0.4rem;
+    }
+
+    #dropzone p {
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
+    #dropzone .badge {
+      display: inline-block;
+      margin-top: 1rem;
+      padding: 0.2rem 0.6rem;
+      background: rgba(57, 211, 83, 0.12);
+      color: var(--accent);
+      border: 1px solid rgba(57, 211, 83, 0.3);
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.06em;
+    }
+
+    /* ── Error / notice ── */
+    #notice {
+      display: none;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      border: 1px solid;
+    }
+
+    #notice.error {
+      background: rgba(248, 81, 73, 0.1);
+      border-color: rgba(248, 81, 73, 0.4);
+      color: #f85149;
+    }
+
+    #notice.info {
+      background: rgba(88, 166, 255, 0.08);
+      border-color: rgba(88, 166, 255, 0.3);
+      color: var(--accent2);
+    }
+
+    /* ── Stats bar ── */
+    #stats {
+      display: none;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+    }
+
+    .stat-card .label {
+      font-size: 0.72rem;
+      font-family: var(--font-mono);
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.35rem;
+    }
+
+    .stat-card .value {
+      font-size: 1.4rem;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      color: var(--accent);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .stat-card .unit {
+      font-size: 0.72rem;
+      color: var(--muted);
+      margin-top: 0.2rem;
+    }
+
+    /* ── Controls ── */
+    #controls {
+      display: none;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .control-group label {
+      font-size: 0.7rem;
+      font-family: var(--font-mono);
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+    }
+
+    select, button {
+      font-family: var(--font-body);
+      font-size: 0.83rem;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--text);
+      padding: 0.4rem 0.75rem;
+      cursor: pointer;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    select:hover, select:focus { border-color: var(--accent2); }
+
+    button.primary {
+      background: var(--accent);
+      color: #0d1117;
+      border-color: var(--accent);
+      font-weight: 500;
+    }
+
+    button.primary:hover { filter: brightness(1.1); }
+
+    button.ghost {
+      background: transparent;
+      color: var(--muted);
+    }
+
+    button.ghost:hover { color: var(--text); border-color: var(--muted); }
+
+    /* ── Chart panel ── */
+    #chart-panel {
+      display: none;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+    }
+
+    #chart-panel .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1.25rem;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    #chart-title {
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    #chart-subtitle {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 0.2rem;
+    }
+
+    .chart-wrap {
+      position: relative;
+      width: 100%;
+      height: 360px;
+    }
+
+    /* ── Table panel ── */
+    #table-panel {
+      display: none;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    #table-panel .panel-header {
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    #table-panel h3 {
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    .table-scroll {
+      overflow-x: auto;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+    }
+
+    thead tr {
+      background: var(--surface2);
+      position: sticky; top: 0;
+    }
+
+    th {
+      padding: 0.6rem 1rem;
+      text-align: left;
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 0.5rem 1rem;
+      border-bottom: 1px solid rgba(48,54,61,0.5);
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+    }
+
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover { background: rgba(255,255,255,0.02); }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      padding: 1.25rem;
+      font-size: 0.72rem;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+      font-family: var(--font-mono);
+    }
+
+    footer span { color: var(--accent); }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#0d1117" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+    </svg>
+  </div>
+  <h1>GREEN BUTTON VIEWER</h1>
+  <p>100% local &mdash; no upload, no server</p>
+</header>
+
+<main>
+  <div id="dropzone">
+    <input type="file" id="file-input" accept=".xml,application/xml,text/xml" />
+    <div class="drop-icon">📂</div>
+    <h2>Drop your Green Button XML file here</h2>
+    <p>Or click to browse &mdash; your data never leaves this browser tab</p>
+    <div class="badge">LOCAL ONLY · NO NETWORK · NO COOKIES</div>
+  </div>
+
+  <div id="notice"></div>
+
+  <div id="stats" style="display:none;"></div>
+
+  <div id="controls" style="display:none;">
+    <div class="control-group">
+      <label>Chart Type</label>
+      <select id="chart-type">
+        <option value="bar">Bar</option>
+        <option value="line">Line</option>
+      </select>
+    </div>
+    <div class="control-group">
+      <label>Aggregation</label>
+      <select id="aggregation">
+        <option value="raw">Raw readings</option>
+        <option value="hourly">Hourly</option>
+        <option value="daily">Daily</option>
+        <option value="monthly">Monthly</option>
+      </select>
+    </div>
+    <div class="control-group">
+      <label>&nbsp;</label>
+      <button class="ghost" id="reset-btn">↩ Load another file</button>
+    </div>
+  </div>
+
+  <div id="chart-panel">
+    <div class="panel-header">
+      <div>
+        <div id="chart-title">Energy Usage</div>
+        <div id="chart-subtitle"></div>
+      </div>
+    </div>
+    <div class="chart-wrap">
+      <canvas id="myChart"></canvas>
+    </div>
+  </div>
+
+  <div id="table-panel">
+    <div class="panel-header">
+      <h3>RAW READINGS</h3>
+      <button class="ghost" id="toggle-table-btn" style="font-size:0.75rem;">Hide table</button>
+    </div>
+    <div class="table-scroll" id="table-scroll">
+      <table id="data-table">
+        <thead>
+          <tr>
+            <th>Start Time</th>
+            <th>Duration (s)</th>
+            <th>Value</th>
+            <th>Unit</th>
+          </tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <span>GREEN BUTTON VIEWER</span> &mdash; All processing happens in your browser. File contents are never transmitted anywhere.
+</footer>
+
+<script>
+// ── State ────────────────────────────────────────────────────────────────────
+let allReadings = [];   // { start: Date, duration: number, value: number, uom: string }
+let chartInstance = null;
+let uomLabel = '';
+
+// ── DOM refs ─────────────────────────────────────────────────────────────────
+const dropzone   = document.getElementById('dropzone');
+const fileInput  = document.getElementById('file-input');
+const notice     = document.getElementById('notice');
+const statsEl    = document.getElementById('stats');
+const controlsEl = document.getElementById('controls');
+const chartPanel = document.getElementById('chart-panel');
+const tablePanelEl = document.getElementById('table-panel');
+const tableBody  = document.getElementById('table-body');
+const chartTypeEl  = document.getElementById('chart-type');
+const aggregationEl = document.getElementById('aggregation');
+const resetBtn   = document.getElementById('reset-btn');
+const toggleTableBtn = document.getElementById('toggle-table-btn');
+const tableScroll = document.getElementById('table-scroll');
+
+// ── Drag & drop ───────────────────────────────────────────────────────────────
+dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag-over'); });
+dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag-over'));
+dropzone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropzone.classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file) handleFile(file);
+});
+fileInput.addEventListener('change', () => {
+  if (fileInput.files[0]) handleFile(fileInput.files[0]);
+});
+
+// ── Controls ──────────────────────────────────────────────────────────────────
+chartTypeEl.addEventListener('change', renderChart);
+aggregationEl.addEventListener('change', renderChart);
+resetBtn.addEventListener('click', resetApp);
+toggleTableBtn.addEventListener('click', () => {
+  const hidden = tableScroll.style.display === 'none';
+  tableScroll.style.display = hidden ? '' : 'none';
+  toggleTableBtn.textContent = hidden ? 'Hide table' : 'Show table';
+});
+
+// ── File handling ─────────────────────────────────────────────────────────────
+function handleFile(file) {
+  if (!file.name.toLowerCase().endsWith('.xml') &&
+      file.type !== 'application/xml' &&
+      file.type !== 'text/xml') {
+    showNotice('Please select a Green Button XML (.xml) file.', 'error');
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = e => parseXML(e.target.result, file.name);
+  reader.onerror = () => showNotice('Could not read file.', 'error');
+  reader.readAsText(file);
+}
+
+// ── XML Parsing ───────────────────────────────────────────────────────────────
+function parseXML(text, filename) {
+  hideNotice();
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(text, 'application/xml');
+
+  const parseError = doc.querySelector('parsererror');
+  if (parseError) {
+    showNotice('XML parse error: ' + parseError.textContent.slice(0, 120), 'error');
+    return;
+  }
+
+  // Namespace-agnostic helper
+  const getAll = (parent, localName) => {
+    // Try both prefixed and un-prefixed
+    let els = [...parent.querySelectorAll(localName)];
+    if (els.length === 0) {
+      // Walk all elements by localName
+      els = [...parent.getElementsByTagNameNS('*', localName)];
+    }
+    return els;
+  };
+
+  const getText = (parent, localName) => {
+    const els = getAll(parent, localName);
+    return els.length ? els[0].textContent.trim() : null;
+  };
+
+  // Detect unit of measure
+  const powerOfTenMap = { '-3': 'm', '-2': 'c', '-1': 'd', '0': '', '3': 'k', '6': 'M', '9': 'G' };
+  const uomMap = {
+    '72': 'Wh', '73': 'kWh', '119': 'W', '38': 'Ah', '33': 'A', '29': 'V',
+    '31': 'V', '71': 'VA', '132': 'kVA', '105': 'var', '133': 'kvar',
+    '61': 'VA', '23': 'BTU', '169': 'therm', '119': 'W', '0': 'N/A'
+  };
+
+  const readingTypeEls = getAll(doc, 'ReadingType');
+  let uom = '';
+  let powerOfTen = 0;
+  if (readingTypeEls.length) {
+    const rt = readingTypeEls[0];
+    const uomCode = getText(rt, 'uom') || getText(rt, 'UOM');
+    const pot = getText(rt, 'powerOfTenMultiplier');
+    if (uomCode) uom = uomMap[uomCode] || `UOM(${uomCode})`;
+    if (pot) {
+      powerOfTen = parseInt(pot, 10);
+      const prefix = powerOfTenMap[pot] || '';
+      if (prefix && uom) uom = prefix + uom;
+    }
+  }
+  uomLabel = uom || 'units';
+
+  // Parse IntervalReading elements
+  const readings = [];
+  const ivBlocks = getAll(doc, 'IntervalBlock');
+
+  for (const block of ivBlocks) {
+    const ivReadings = getAll(block, 'IntervalReading');
+    for (const ir of ivReadings) {
+      const startEl = getText(ir, 'start') || getText(ir, 'Start');
+      const durationEl = getText(ir, 'duration') || getText(ir, 'Duration');
+      const valueEl = getText(ir, 'value') || getText(ir, 'Value');
+
+      if (startEl === null || valueEl === null) continue;
+
+      const startTs = parseInt(startEl, 10);
+      const duration = parseInt(durationEl || '0', 10);
+      let value = parseFloat(valueEl);
+
+      // Apply power of ten if not already reflected in uom prefix
+      if (powerOfTen !== 0 && uomLabel === (uom || 'units')) {
+        value = value * Math.pow(10, powerOfTen);
+      }
+
+      if (!isNaN(startTs) && !isNaN(value)) {
+        readings.push({
+          start: new Date(startTs * 1000),
+          duration,
+          value,
+          uom: uomLabel
+        });
+      }
+    }
+  }
+
+  // Fallback: try MeterReading / Reading paths (some ESPI variants)
+  if (readings.length === 0) {
+    const readingEls = getAll(doc, 'Reading');
+    for (const r of readingEls) {
+      const ts = getText(r, 'timeStamp') || getText(r, 'reportDateTime');
+      const val = getText(r, 'value');
+      if (ts && val) {
+        readings.push({ start: new Date(ts), duration: 0, value: parseFloat(val), uom: uomLabel });
+      }
+    }
+  }
+
+  if (readings.length === 0) {
+    showNotice(
+      'No interval readings found in this file. ' +
+      'Make sure it is a valid Green Button / ESPI XML export.',
+      'error'
+    );
+    return;
+  }
+
+  // Sort by time
+  readings.sort((a, b) => a.start - b.start);
+  allReadings = readings;
+
+  showNotice(
+    `✓ Loaded ${readings.length.toLocaleString()} readings from "${filename}"`,
+    'info'
+  );
+
+  populateStats(readings);
+  populateTable(readings);
+  dropzone.style.display = 'none';
+  statsEl.style.display = 'grid';
+  controlsEl.style.display = 'flex';
+  chartPanel.style.display = 'block';
+  tablePanelEl.style.display = 'block';
+  renderChart();
+}
+
+// ── Stats ─────────────────────────────────────────────────────────────────────
+function populateStats(readings) {
+  const values = readings.map(r => r.value);
+  const total = values.reduce((a, b) => a + b, 0);
+  const avg = total / values.length;
+  const max = Math.max(...values);
+  const min = Math.min(...values);
+  const span = ((readings[readings.length-1].start - readings[0].start) / 86400000).toFixed(1);
+
+  statsEl.innerHTML = [
+    { label: 'Readings', value: readings.length.toLocaleString(), unit: 'data points' },
+    { label: 'Total', value: fmt(total), unit: uomLabel },
+    { label: 'Average', value: fmt(avg), unit: `${uomLabel} / reading` },
+    { label: 'Peak', value: fmt(max), unit: uomLabel },
+    { label: 'Min', value: fmt(min), unit: uomLabel },
+    { label: 'Span', value: span, unit: 'days' },
+  ].map(s => `
+    <div class="stat-card">
+      <div class="label">${s.label}</div>
+      <div class="value">${s.value}</div>
+      <div class="unit">${s.unit}</div>
+    </div>
+  `).join('');
+}
+
+// ── Table ─────────────────────────────────────────────────────────────────────
+function populateTable(readings) {
+  tableBody.innerHTML = readings.map(r => `
+    <tr>
+      <td>${r.start.toLocaleString()}</td>
+      <td>${r.duration || '—'}</td>
+      <td>${fmt(r.value)}</td>
+      <td>${r.uom}</td>
+    </tr>
+  `).join('');
+}
+
+// ── Aggregation ───────────────────────────────────────────────────────────────
+function aggregate(readings, mode) {
+  if (mode === 'raw') {
+    return {
+      labels: readings.map(r => r.start.toLocaleString()),
+      values: readings.map(r => r.value),
+    };
+  }
+
+  const buckets = new Map();
+  const keyFn = {
+    hourly: d => {
+      const k = new Date(d); k.setMinutes(0,0,0); return k.getTime();
+    },
+    daily: d => {
+      const k = new Date(d); k.setHours(0,0,0,0); return k.getTime();
+    },
+    monthly: d => {
+      const k = new Date(d); k.setDate(1); k.setHours(0,0,0,0); return k.getTime();
+    },
+  }[mode];
+
+  for (const r of readings) {
+    const k = keyFn(r.start);
+    buckets.set(k, (buckets.get(k) || 0) + r.value);
+  }
+
+  const sorted = [...buckets.entries()].sort((a,b) => a[0]-b[0]);
+  const labelFmts = {
+    hourly:  d => `${d.toLocaleDateString()} ${d.getHours()}:00`,
+    daily:   d => d.toLocaleDateString(undefined, { month:'short', day:'numeric', year:'numeric' }),
+    monthly: d => d.toLocaleDateString(undefined, { month:'short', year:'numeric' }),
+  };
+
+  return {
+    labels: sorted.map(([k]) => labelFmts[mode](new Date(k))),
+    values: sorted.map(([,v]) => v),
+  };
+}
+
+// ── Chart ─────────────────────────────────────────────────────────────────────
+function renderChart() {
+  if (!allReadings.length) return;
+
+  const mode = aggregationEl.value;
+  const type = chartTypeEl.value;
+  const { labels, values } = aggregate(allReadings, mode);
+
+  const titleEl = document.getElementById('chart-title');
+  const subtitleEl = document.getElementById('chart-subtitle');
+
+  const modeLabel = { raw: 'Raw', hourly: 'Hourly', daily: 'Daily', monthly: 'Monthly' }[mode];
+  titleEl.textContent = `${modeLabel} Energy Usage`;
+  subtitleEl.textContent =
+    `${labels.length} ${mode === 'raw' ? 'readings' : 'buckets'} · ${
+      allReadings[0].start.toLocaleDateString()} – ${
+      allReadings[allReadings.length-1].start.toLocaleDateString()}`;
+
+  const ctx = document.getElementById('myChart').getContext('2d');
+  if (chartInstance) chartInstance.destroy();
+
+  const accentHex = '#39d353';
+  const accent2Hex = '#58a6ff';
+
+  // For large datasets, line is more readable
+  const effectiveType = (type === 'bar' && values.length > 200) ? 'line' : type;
+
+  chartInstance = new Chart(ctx, {
+    type: effectiveType,
+    data: {
+      labels,
+      datasets: [{
+        label: uomLabel,
+        data: values,
+        backgroundColor: effectiveType === 'bar'
+          ? 'rgba(57,211,83,0.55)'
+          : 'rgba(57,211,83,0.15)',
+        borderColor: accentHex,
+        borderWidth: effectiveType === 'line' ? 1.5 : 0,
+        pointRadius: values.length > 100 ? 0 : 3,
+        pointHoverRadius: 5,
+        fill: effectiveType === 'line',
+        tension: 0.3,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1c2330',
+          borderColor: '#30363d',
+          borderWidth: 1,
+          titleColor: '#e6edf3',
+          bodyColor: '#7d8590',
+          padding: 10,
+          callbacks: {
+            label: ctx => ` ${fmt(ctx.parsed.y)} ${uomLabel}`
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: {
+            color: '#7d8590',
+            font: { family: 'Space Mono', size: 10 },
+            maxRotation: 45,
+            autoSkip: true,
+            maxTicksLimit: 16,
+          },
+          grid: { color: 'rgba(48,54,61,0.6)' },
+        },
+        y: {
+          ticks: {
+            color: '#7d8590',
+            font: { family: 'Space Mono', size: 10 },
+            callback: v => fmt(v) + ' ' + uomLabel,
+          },
+          grid: { color: 'rgba(48,54,61,0.6)' },
+        }
+      }
+    }
+  });
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function fmt(n) {
+  if (Math.abs(n) >= 1e6) return (n/1e6).toFixed(2) + 'M';
+  if (Math.abs(n) >= 1e3) return (n/1e3).toFixed(2) + 'k';
+  return n.toFixed(2);
+}
+
+function showNotice(msg, type) {
+  notice.textContent = msg;
+  notice.className = type;
+  notice.style.display = 'block';
+}
+
+function hideNotice() {
+  notice.style.display = 'none';
+}
+
+function resetApp() {
+  allReadings = [];
+  if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
+  dropzone.style.display = '';
+  statsEl.style.display = 'none';
+  statsEl.innerHTML = '';
+  controlsEl.style.display = 'none';
+  chartPanel.style.display = 'none';
+  tablePanelEl.style.display = 'none';
+  tableBody.innerHTML = '';
+  fileInput.value = '';
+  hideNotice();
+}
+</script>
+</body>
+</html>
