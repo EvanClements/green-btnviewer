@@ -252,6 +252,188 @@
 
     button.ghost:hover { color: var(--text); border-color: var(--muted); }
 
+    /* ── Breadcrumb ── */
+    #breadcrumb {
+      display: none;
+      align-items: center;
+      gap: 0.3rem;
+      flex-wrap: wrap;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+    }
+
+    .crumb {
+      color: var(--accent2);
+      cursor: pointer;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      border: 1px solid transparent;
+      transition: border-color 0.15s, background 0.15s;
+    }
+
+    .crumb:hover {
+      border-color: var(--accent2);
+      background: rgba(88,166,255,0.08);
+    }
+
+    .crumb.active {
+      color: var(--text);
+      cursor: default;
+      pointer-events: none;
+    }
+
+    .crumb-sep {
+      color: var(--border);
+    }
+
+    /* drill-in hint on chart */
+    #drill-hint {
+      font-size: 0.7rem;
+      color: var(--muted);
+      font-family: var(--font-mono);
+      margin-top: 0.5rem;
+      text-align: center;
+      min-height: 1.2em;
+      transition: opacity 0.2s;
+    }
+
+
+    /* ── Weather panel ── */
+    #weather-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+      display: none;
+      flex-wrap: wrap;
+      gap: 1rem;
+      align-items: flex-end;
+    }
+
+    #weather-panel .weather-title {
+      width: 100%;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: -0.25rem;
+    }
+
+    .postal-input-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      flex: 1;
+      min-width: 160px;
+      max-width: 260px;
+    }
+
+    .postal-input-wrap label {
+      font-size: 0.7rem;
+      font-family: var(--font-mono);
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+    }
+
+    .postal-input-wrap input[type="text"] {
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--text);
+      padding: 0.4rem 0.75rem;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .postal-input-wrap input[type="text"]:focus { border-color: var(--accent2); }
+    .postal-input-wrap input[type="text"]::placeholder { color: var(--muted); }
+
+    .unit-toggle {
+      display: flex;
+      gap: 0.4rem;
+      flex-direction: column;
+    }
+
+    .unit-toggle .toggle-label {
+      font-size: 0.7rem;
+      font-family: var(--font-mono);
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+    }
+
+    .unit-toggle .toggle-btns {
+      display: flex;
+      gap: 0.4rem;
+    }
+
+    .unit-toggle button {
+      padding: 0.4rem 0.7rem;
+      font-size: 0.75rem;
+      font-family: var(--font-mono);
+      background: var(--surface2);
+      color: var(--muted);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .unit-toggle button.active {
+      background: rgba(88,166,255,0.15);
+      color: var(--accent2);
+      border-color: var(--accent2);
+    }
+
+    #weather-fetch-btn {
+      align-self: flex-end;
+    }
+
+    #weather-status {
+      font-size: 0.75rem;
+      font-family: var(--font-mono);
+      color: var(--muted);
+      align-self: center;
+      flex: 1;
+      min-width: 120px;
+    }
+
+    #weather-status.ok   { color: var(--accent); }
+    #weather-status.err  { color: #f85149; }
+    #weather-status.busy { color: var(--warn); }
+
+    /* ── Chart legend ── */
+    #chart-legend {
+      display: none;
+      gap: 1.25rem;
+      flex-wrap: wrap;
+      margin-bottom: 0.75rem;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.72rem;
+      font-family: var(--font-mono);
+      color: var(--muted);
+    }
+
+    .legend-swatch {
+      width: 20px; height: 3px;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+
+    .legend-swatch.energy { background: #39d353; }
+    .legend-swatch.temp   { background: #f0b429; }
+
+
     /* ── Chart panel ── */
     #chart-panel {
       display: none;
@@ -399,18 +581,33 @@
       </select>
     </div>
     <div class="control-group">
-      <label>Aggregation</label>
-      <select id="aggregation">
-        <option value="raw">Raw readings</option>
-        <option value="hourly">Hourly</option>
-        <option value="daily">Daily</option>
-        <option value="monthly">Monthly</option>
-      </select>
+      <label>Year</label>
+      <select id="year-select"></select>
     </div>
     <div class="control-group">
       <label>&nbsp;</label>
       <button class="ghost" id="reset-btn">↩ Load another file</button>
     </div>
+  </div>
+
+  <div id="breadcrumb" style="display:none;"></div>
+
+  <!-- Weather overlay panel -->
+  <div id="weather-panel">
+    <div class="weather-title">🌡 Temperature Overlay</div>
+    <div class="postal-input-wrap">
+      <label>Postal / ZIP Code</label>
+      <input type="text" id="postal-input" placeholder="e.g. 04101 or K1A 0A9" maxlength="10" />
+    </div>
+    <div class="unit-toggle">
+      <span class="toggle-label">Units</span>
+      <div class="toggle-btns">
+        <button id="unit-f" class="active" onclick="setTempUnit('F')">°F</button>
+        <button id="unit-c" onclick="setTempUnit('C')">°C</button>
+      </div>
+    </div>
+    <button class="primary" id="weather-fetch-btn">Fetch Weather</button>
+    <div id="weather-status">Enter a postal code to overlay temperature data.</div>
   </div>
 
   <div id="chart-panel">
@@ -420,9 +617,14 @@
         <div id="chart-subtitle"></div>
       </div>
     </div>
+    <div id="chart-legend">
+      <div class="legend-item"><div class="legend-swatch energy"></div>Energy Usage</div>
+      <div class="legend-item" id="legend-temp" style="display:none;"><div class="legend-swatch temp"></div><span id="legend-temp-label">Avg Temp (°F)</span></div>
+    </div>
     <div class="chart-wrap">
       <canvas id="myChart"></canvas>
     </div>
+    <div id="drill-hint"></div>
   </div>
 
   <div id="table-panel">
@@ -456,20 +658,40 @@ let allReadings = [];   // { start: Date, duration: number, value: number, uom: 
 let chartInstance = null;
 let uomLabel = '';
 
+// Drill-down state: level = 'year'|'month'|'day'|'hour'
+// context: { year, month (0-based), day (1-based) }
+let drillLevel = 'year';
+let drillContext = {};
+
+// Weather state
+// hourlyTemps: Map<isoDateHour, celsius>  e.g. "2023-06-15T14" => 22.3
+let hourlyTemps = new Map();
+let tempUnit = 'F';   // 'F' | 'C'
+let weatherLocation = null;  // { name, lat, lon, country }
+
 // ── DOM refs ─────────────────────────────────────────────────────────────────
-const dropzone   = document.getElementById('dropzone');
-const fileInput  = document.getElementById('file-input');
-const notice     = document.getElementById('notice');
-const statsEl    = document.getElementById('stats');
-const controlsEl = document.getElementById('controls');
-const chartPanel = document.getElementById('chart-panel');
+const dropzone     = document.getElementById('dropzone');
+const fileInput    = document.getElementById('file-input');
+const notice       = document.getElementById('notice');
+const statsEl      = document.getElementById('stats');
+const controlsEl   = document.getElementById('controls');
+const chartPanel   = document.getElementById('chart-panel');
 const tablePanelEl = document.getElementById('table-panel');
-const tableBody  = document.getElementById('table-body');
+const tableBody    = document.getElementById('table-body');
 const chartTypeEl  = document.getElementById('chart-type');
-const aggregationEl = document.getElementById('aggregation');
-const resetBtn   = document.getElementById('reset-btn');
+const yearSelectEl = document.getElementById('year-select');
+const resetBtn     = document.getElementById('reset-btn');
 const toggleTableBtn = document.getElementById('toggle-table-btn');
-const tableScroll = document.getElementById('table-scroll');
+const tableScroll  = document.getElementById('table-scroll');
+const breadcrumbEl   = document.getElementById('breadcrumb');
+const drillHintEl    = document.getElementById('drill-hint');
+const weatherPanelEl = document.getElementById('weather-panel');
+const postalInputEl  = document.getElementById('postal-input');
+const weatherFetchBtn = document.getElementById('weather-fetch-btn');
+const weatherStatusEl = document.getElementById('weather-status');
+const chartLegendEl  = document.getElementById('chart-legend');
+const legendTempEl   = document.getElementById('legend-temp');
+const legendTempLbl  = document.getElementById('legend-temp-label');
 
 // ── Drag & drop ───────────────────────────────────────────────────────────────
 dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag-over'); });
@@ -485,9 +707,15 @@ fileInput.addEventListener('change', () => {
 });
 
 // ── Controls ──────────────────────────────────────────────────────────────────
-chartTypeEl.addEventListener('change', renderChart);
-aggregationEl.addEventListener('change', renderChart);
+chartTypeEl.addEventListener('change', () => renderChart());
+yearSelectEl.addEventListener('change', () => {
+  drillContext = { year: parseInt(yearSelectEl.value) };
+  drillLevel = 'month';
+  renderChart();
+});
 resetBtn.addEventListener('click', resetApp);
+weatherFetchBtn.addEventListener('click', fetchWeather);
+postalInputEl.addEventListener('keydown', e => { if (e.key === 'Enter') fetchWeather(); });
 toggleTableBtn.addEventListener('click', () => {
   const hidden = tableScroll.style.display === 'none';
   tableScroll.style.display = hidden ? '' : 'none';
@@ -625,11 +853,20 @@ function parseXML(text, filename) {
 
   populateStats(readings);
   populateTable(readings);
+  populateYearSelect(readings);
+
+  // Start at yearly overview
+  drillLevel = 'year';
+  drillContext = {};
+
   dropzone.style.display = 'none';
   statsEl.style.display = 'grid';
   controlsEl.style.display = 'flex';
   chartPanel.style.display = 'block';
+  weatherPanelEl.style.display = 'flex';
   tablePanelEl.style.display = 'block';
+  breadcrumbEl.style.display = 'flex';
+  chartLegendEl.style.display = 'flex';
   renderChart();
 }
 
@@ -670,91 +907,381 @@ function populateTable(readings) {
   `).join('');
 }
 
-// ── Aggregation ───────────────────────────────────────────────────────────────
-function aggregate(readings, mode) {
-  if (mode === 'raw') {
-    return {
-      labels: readings.map(r => r.start.toLocaleString()),
-      values: readings.map(r => r.value),
-    };
+
+// ── Temperature unit toggle ───────────────────────────────────────────────────
+function setTempUnit(u) {
+  tempUnit = u;
+  document.getElementById('unit-f').classList.toggle('active', u === 'F');
+  document.getElementById('unit-c').classList.toggle('active', u === 'C');
+  if (legendTempLbl) legendTempLbl.textContent = `Avg Temp (°${u})`;
+  renderChart();
+}
+
+function toDisplayTemp(celsius) {
+  return tempUnit === 'F' ? celsius * 9/5 + 32 : celsius;
+}
+
+// ── Geocode postal code via Open-Meteo geocoding API ─────────────────────────
+async function geocodePostal(postal) {
+  const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(postal)}&count=5&language=en&format=json`;
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error(`Geocoding HTTP ${resp.status}`);
+  const data = await resp.json();
+  if (!data.results || data.results.length === 0) throw new Error('Postal code not found');
+  // Prefer result with a matching postal code field; otherwise take first
+  const match = data.results.find(r => r.postcodes && r.postcodes.some(p =>
+    p.replace(/\s/g,'').toLowerCase() === postal.replace(/\s/g,'').toLowerCase()
+  )) || data.results[0];
+  return { name: match.name, country: match.country_code, lat: match.latitude, lon: match.longitude };
+}
+
+// ── Fetch historical hourly temp from Open-Meteo Archive ─────────────────────
+async function fetchWeather() {
+  const postal = postalInputEl.value.trim();
+  if (!postal) {
+    setWeatherStatus('Please enter a postal or ZIP code.', 'err');
+    return;
+  }
+  if (!allReadings.length) {
+    setWeatherStatus('Load an energy file first.', 'err');
+    return;
   }
 
-  const buckets = new Map();
-  const keyFn = {
-    hourly: d => {
-      const k = new Date(d); k.setMinutes(0,0,0); return k.getTime();
-    },
-    daily: d => {
-      const k = new Date(d); k.setHours(0,0,0,0); return k.getTime();
-    },
-    monthly: d => {
-      const k = new Date(d); k.setDate(1); k.setHours(0,0,0,0); return k.getTime();
-    },
-  }[mode];
+  setWeatherStatus('Geocoding postal code…', 'busy');
+  weatherFetchBtn.disabled = true;
 
-  for (const r of readings) {
-    const k = keyFn(r.start);
-    buckets.set(k, (buckets.get(k) || 0) + r.value);
+  try {
+    const loc = await geocodePostal(postal);
+    weatherLocation = loc;
+    setWeatherStatus(`Located: ${loc.name}, ${loc.country.toUpperCase()} — fetching temps…`, 'busy');
+
+    // Date range from readings
+    const startDate = allReadings[0].start;
+    const endDate   = allReadings[allReadings.length - 1].start;
+    const fmt = d => d.toISOString().slice(0, 10);
+
+    const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${loc.lat}&longitude=${loc.lon}` +
+      `&start_date=${fmt(startDate)}&end_date=${fmt(endDate)}` +
+      `&hourly=temperature_2m&temperature_unit=celsius&timezone=auto&format=json`;
+
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error(`Weather API HTTP ${resp.status}`);
+    const data = await resp.json();
+
+    if (!data.hourly || !data.hourly.time) throw new Error('Unexpected weather API response');
+
+    hourlyTemps = new Map();
+    const times  = data.hourly.time;       // ISO strings like "2023-06-15T14:00"
+    const temps  = data.hourly.temperature_2m;
+    for (let i = 0; i < times.length; i++) {
+      if (temps[i] !== null && temps[i] !== undefined) {
+        // Key: "YYYY-MM-DDTHH" (drop :00)
+        hourlyTemps.set(times[i].slice(0, 13), temps[i]);
+      }
+    }
+
+    const count = hourlyTemps.size;
+    setWeatherStatus(`✓ ${count.toLocaleString()} hourly readings for ${loc.name}`, 'ok');
+    legendTempEl.style.display = '';
+    if (legendTempLbl) legendTempLbl.textContent = `Avg Temp (°${tempUnit})`;
+    renderChart();
+
+  } catch (err) {
+    setWeatherStatus(`Error: ${err.message}`, 'err');
+    console.error(err);
+  } finally {
+    weatherFetchBtn.disabled = false;
+  }
+}
+
+function setWeatherStatus(msg, cls = '') {
+  weatherStatusEl.textContent = msg;
+  weatherStatusEl.className = cls;
+}
+
+// ── Temperature aggregation helpers ──────────────────────────────────────────
+// All return arrays aligned with the energy labels/keys, or null if no data.
+
+function avgCelsius(keys_arr) {
+  // keys_arr: array of { year, month?, day?, hour? } — same as energy keys
+  // We average all hourly temps that fall within each bucket.
+  return keys_arr.map(k => {
+    if (!k) return null;
+    const vals = [];
+    if (k.hour !== undefined) {
+      // exact hour bucket
+      const iso = isoHourKey(k.year, k.month, k.day, k.hour);
+      const v = hourlyTemps.get(iso);
+      if (v !== undefined) vals.push(v);
+    } else if (k.day !== undefined) {
+      // all hours of the day
+      for (let h = 0; h < 24; h++) {
+        const v = hourlyTemps.get(isoHourKey(k.year, k.month, k.day, h));
+        if (v !== undefined) vals.push(v);
+      }
+    } else if (k.month !== undefined) {
+      // all days of month
+      const days = new Date(k.year, k.month + 1, 0).getDate();
+      for (let d = 1; d <= days; d++) {
+        for (let h = 0; h < 24; h++) {
+          const v = hourlyTemps.get(isoHourKey(k.year, k.month, d, h));
+          if (v !== undefined) vals.push(v);
+        }
+      }
+    }
+    if (!vals.length) return null;
+    return vals.reduce((a,b) => a+b, 0) / vals.length;
+  });
+}
+
+function isoHourKey(year, month, day, hour) {
+  // Returns "YYYY-MM-DDTHH"
+  const mm = String(month + 1).padStart(2,'0');
+  const dd = String(day).padStart(2,'0');
+  const hh = String(hour).padStart(2,'0');
+  return `${year}-${mm}-${dd}T${hh}`;
+}
+
+// ── Year selector ─────────────────────────────────────────────────────────────
+function populateYearSelect(readings) {
+  const years = [...new Set(readings.map(r => r.start.getFullYear()))].sort();
+  yearSelectEl.innerHTML = years.map(y =>
+    `<option value="${y}">${y}</option>`
+  ).join('');
+  // default to most recent year
+  yearSelectEl.value = years[years.length - 1];
+}
+
+// ── Drill-down data builders ──────────────────────────────────────────────────
+
+// Returns { labels, values, keys } where keys are used to drill into next level
+function buildYearData(readings) {
+  // Monthly totals across all years — one column per year×month? No:
+  // At 'year' level we show monthly totals for the selected year.
+  const year = parseInt(yearSelectEl.value);
+  const filtered = readings.filter(r => r.start.getFullYear() === year);
+  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const buckets = new Array(12).fill(0);
+  for (const r of filtered) buckets[r.start.getMonth()] += r.value;
+  // only include months that exist in data
+  const existing = new Set(filtered.map(r => r.start.getMonth()));
+  const labels = [], values = [], keys = [];
+  for (let m = 0; m < 12; m++) {
+    if (existing.has(m)) {
+      labels.push(MONTHS[m]);
+      values.push(buckets[m]);
+      keys.push({ year, month: m });
+    }
+  }
+  return { labels, values, keys };
+}
+
+function buildMonthData(readings, year, month) {
+  const filtered = readings.filter(r =>
+    r.start.getFullYear() === year && r.start.getMonth() === month
+  );
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const buckets = new Array(daysInMonth + 1).fill(0);
+  for (const r of filtered) buckets[r.start.getDate()] += r.value;
+  const existing = new Set(filtered.map(r => r.start.getDate()));
+  const labels = [], values = [], keys = [];
+  for (let d = 1; d <= daysInMonth; d++) {
+    if (existing.has(d)) {
+      labels.push(String(d));
+      values.push(buckets[d]);
+      keys.push({ year, month, day: d });
+    }
+  }
+  return { labels, values, keys };
+}
+
+function buildDayData(readings, year, month, day) {
+  const filtered = readings.filter(r => {
+    const s = r.start;
+    return s.getFullYear() === year && s.getMonth() === month && s.getDate() === day;
+  });
+  const buckets = new Array(24).fill(0);
+  for (const r of filtered) buckets[r.start.getHours()] += r.value;
+  const existing = new Set(filtered.map(r => r.start.getHours()));
+  const labels = [], values = [], keys = [];
+  for (let h = 0; h < 24; h++) {
+    if (existing.has(h)) {
+      labels.push(`${String(h).padStart(2,'0')}:00`);
+      values.push(buckets[h]);
+      keys.push(null); // terminal level
+    }
+  }
+  return { labels, values, keys };
+}
+
+// ── Breadcrumb ────────────────────────────────────────────────────────────────
+function updateBreadcrumb() {
+  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const year = parseInt(yearSelectEl.value);
+  const crumbs = [];
+
+  // All years overview crumb
+  crumbs.push({ label: 'All Years', level: 'year', ctx: {} });
+
+  if (drillLevel === 'month' || drillLevel === 'day' || drillLevel === 'hour') {
+    crumbs.push({ label: String(year), level: 'month', ctx: { year } });
+  }
+  if (drillLevel === 'day' || drillLevel === 'hour') {
+    const { month } = drillContext;
+    crumbs.push({ label: MONTHS[month], level: 'day', ctx: { year, month } });
+  }
+  if (drillLevel === 'hour') {
+    const { month, day } = drillContext;
+    crumbs.push({ label: `${MONTHS[month]} ${day}`, level: 'hour', ctx: { year, month, day } });
   }
 
-  const sorted = [...buckets.entries()].sort((a,b) => a[0]-b[0]);
-  const labelFmts = {
-    hourly:  d => `${d.toLocaleDateString()} ${d.getHours()}:00`,
-    daily:   d => d.toLocaleDateString(undefined, { month:'short', day:'numeric', year:'numeric' }),
-    monthly: d => d.toLocaleDateString(undefined, { month:'short', year:'numeric' }),
-  };
+  breadcrumbEl.innerHTML = crumbs.map((c, i) => {
+    const isLast = i === crumbs.length - 1;
+    const sep = i < crumbs.length - 1 ? '<span class="crumb-sep">›</span>' : '';
+    if (isLast) {
+      return `<span class="crumb active">${c.label}</span>${sep}`;
+    }
+    return `<span class="crumb" data-level="${c.level}" data-ctx='${JSON.stringify(c.ctx)}'>${c.label}</span>${sep}`;
+  }).join('');
 
-  return {
-    labels: sorted.map(([k]) => labelFmts[mode](new Date(k))),
-    values: sorted.map(([,v]) => v),
-  };
+  // Wire clicks
+  breadcrumbEl.querySelectorAll('.crumb:not(.active)').forEach(el => {
+    el.addEventListener('click', () => {
+      const level = el.dataset.level;
+      const ctx = JSON.parse(el.dataset.ctx);
+      drillLevel = level;
+      drillContext = ctx;
+      if (level === 'year') {
+        // sync year select to ctx.year if set
+      }
+      renderChart();
+    });
+  });
 }
 
 // ── Chart ─────────────────────────────────────────────────────────────────────
 function renderChart() {
   if (!allReadings.length) return;
 
-  const mode = aggregationEl.value;
   const type = chartTypeEl.value;
-  const { labels, values } = aggregate(allReadings, mode);
+  const year = parseInt(yearSelectEl.value);
+  const MONTHS = ['January','February','March','April','May','June',
+                  'July','August','September','October','November','December'];
 
-  const titleEl = document.getElementById('chart-title');
-  const subtitleEl = document.getElementById('chart-subtitle');
+  let labels, values, keys, title, subtitle, canDrillDown;
 
-  const modeLabel = { raw: 'Raw', hourly: 'Hourly', daily: 'Daily', monthly: 'Monthly' }[mode];
-  titleEl.textContent = `${modeLabel} Energy Usage`;
-  subtitleEl.textContent =
-    `${labels.length} ${mode === 'raw' ? 'readings' : 'buckets'} · ${
-      allReadings[0].start.toLocaleDateString()} – ${
-      allReadings[allReadings.length-1].start.toLocaleDateString()}`;
+  if (drillLevel === 'year' || drillLevel === 'month') {
+    ({ labels, values, keys } = buildYearData(allReadings));
+    drillLevel = 'month';
+    drillContext = { year };
+    title = `Monthly Totals — ${year}`;
+    subtitle = `${labels.length} months · click a bar to see daily breakdown`;
+    canDrillDown = true;
+  } else if (drillLevel === 'day') {
+    const { month } = drillContext;
+    ({ labels, values, keys } = buildMonthData(allReadings, year, month));
+    title = `Daily Totals — ${MONTHS[month]} ${year}`;
+    subtitle = `${labels.length} days · click a bar to see hourly breakdown`;
+    canDrillDown = true;
+  } else {
+    const { month, day } = drillContext;
+    ({ labels, values, keys } = buildDayData(allReadings, year, month, day));
+    title = `Hourly Totals — ${MONTHS[month]} ${day}, ${year}`;
+    subtitle = `${labels.length} hours`;
+    canDrillDown = false;
+  }
+
+  document.getElementById('chart-title').textContent = title;
+  document.getElementById('chart-subtitle').textContent = subtitle;
+  drillHintEl.textContent = canDrillDown ? '↓ Click any bar to drill down' : '';
+
+  updateBreadcrumb();
+
+  // Temperature overlay
+  const hasWeather = hourlyTemps.size > 0;
+  const rawTemps = hasWeather ? avgCelsius(keys) : null;
+  const tempValues = rawTemps ? rawTemps.map(v => v === null ? null : toDisplayTemp(v)) : null;
 
   const ctx = document.getElementById('myChart').getContext('2d');
   if (chartInstance) chartInstance.destroy();
 
-  const accentHex = '#39d353';
-  const accent2Hex = '#58a6ff';
+  const isLine = type === 'line';
 
-  // For large datasets, line is more readable
-  const effectiveType = (type === 'bar' && values.length > 200) ? 'line' : type;
+  const datasets = [
+    {
+      label: `Energy (${uomLabel})`,
+      data: values,
+      backgroundColor: isLine ? 'rgba(57,211,83,0.15)' : values.map(() => 'rgba(57,211,83,0.55)'),
+      borderColor: '#39d353',
+      borderWidth: isLine ? 1.5 : 0,
+      pointRadius: isLine ? 3 : 0,
+      pointHoverRadius: 6,
+      hoverBackgroundColor: '#39d353',
+      fill: isLine,
+      tension: 0.3,
+      yAxisID: 'yEnergy',
+      order: 2,
+    }
+  ];
+
+  if (hasWeather && tempValues) {
+    datasets.push({
+      label: `Avg Temp (°${tempUnit})`,
+      data: tempValues,
+      type: 'line',
+      borderColor: '#f0b429',
+      backgroundColor: 'rgba(240,180,41,0.08)',
+      borderWidth: 2,
+      pointRadius: 3,
+      pointHoverRadius: 6,
+      pointBackgroundColor: '#f0b429',
+      fill: false,
+      tension: 0.4,
+      yAxisID: 'yTemp',
+      spanGaps: true,
+      order: 1,
+    });
+  }
+
+  const scales = {
+    x: {
+      ticks: {
+        color: '#7d8590',
+        font: { family: 'Space Mono', size: 10 },
+        maxRotation: 45,
+        autoSkip: true,
+        maxTicksLimit: 31,
+      },
+      grid: { color: 'rgba(48,54,61,0.6)' },
+    },
+    yEnergy: {
+      type: 'linear',
+      position: 'left',
+      ticks: {
+        color: '#39d353',
+        font: { family: 'Space Mono', size: 10 },
+        callback: v => fmt(v) + ' ' + uomLabel,
+      },
+      grid: { color: 'rgba(48,54,61,0.6)' },
+    },
+  };
+
+  if (hasWeather && tempValues) {
+    scales.yTemp = {
+      type: 'linear',
+      position: 'right',
+      ticks: {
+        color: '#f0b429',
+        font: { family: 'Space Mono', size: 10 },
+        callback: v => fmtTemp(v),
+      },
+      grid: { drawOnChartArea: false },
+    };
+  }
 
   chartInstance = new Chart(ctx, {
-    type: effectiveType,
-    data: {
-      labels,
-      datasets: [{
-        label: uomLabel,
-        data: values,
-        backgroundColor: effectiveType === 'bar'
-          ? 'rgba(57,211,83,0.55)'
-          : 'rgba(57,211,83,0.15)',
-        borderColor: accentHex,
-        borderWidth: effectiveType === 'line' ? 1.5 : 0,
-        pointRadius: values.length > 100 ? 0 : 3,
-        pointHoverRadius: 5,
-        fill: effectiveType === 'line',
-        tension: 0.3,
-      }]
-    },
+    type: isLine ? 'line' : 'bar',
+    data: { labels, datasets },
     options: {
       responsive: true,
       maintainAspectRatio: false,
@@ -769,30 +1296,34 @@ function renderChart() {
           bodyColor: '#7d8590',
           padding: 10,
           callbacks: {
-            label: ctx => ` ${fmt(ctx.parsed.y)} ${uomLabel}`
+            label: c => {
+              if (c.datasetIndex === 0) return ` ${fmt(c.parsed.y)} ${uomLabel}`;
+              const v = c.parsed.y;
+              return v === null ? '' : ` ${fmtTemp(v)} °${tempUnit}`;
+            }
           }
         }
       },
-      scales: {
-        x: {
-          ticks: {
-            color: '#7d8590',
-            font: { family: 'Space Mono', size: 10 },
-            maxRotation: 45,
-            autoSkip: true,
-            maxTicksLimit: 16,
-          },
-          grid: { color: 'rgba(48,54,61,0.6)' },
-        },
-        y: {
-          ticks: {
-            color: '#7d8590',
-            font: { family: 'Space Mono', size: 10 },
-            callback: v => fmt(v) + ' ' + uomLabel,
-          },
-          grid: { color: 'rgba(48,54,61,0.6)' },
+      onClick: canDrillDown ? (event, elements) => {
+        if (!elements.length) return;
+        // Only drill on energy bars (dataset 0), not temp line
+        const el = elements.find(e => e.datasetIndex === 0) || elements[0];
+        const idx = el.index;
+        const key = keys[idx];
+        if (!key) return;
+        if (drillLevel === 'month') {
+          drillContext = { year: key.year, month: key.month };
+          drillLevel = 'day';
+        } else if (drillLevel === 'day') {
+          drillContext = { year: key.year, month: key.month, day: key.day };
+          drillLevel = 'hour';
         }
-      }
+        renderChart();
+      } : undefined,
+      onHover: canDrillDown ? (event, elements) => {
+        event.native.target.style.cursor = elements.length ? 'pointer' : 'default';
+      } : undefined,
+      scales,
     }
   });
 }
@@ -802,6 +1333,11 @@ function fmt(n) {
   if (Math.abs(n) >= 1e6) return (n/1e6).toFixed(2) + 'M';
   if (Math.abs(n) >= 1e3) return (n/1e3).toFixed(2) + 'k';
   return n.toFixed(2);
+}
+
+function fmtTemp(v) {
+  if (v === null || v === undefined) return '—';
+  return v.toFixed(1) + '°' + tempUnit;
 }
 
 function showNotice(msg, type) {
@@ -816,14 +1352,26 @@ function hideNotice() {
 
 function resetApp() {
   allReadings = [];
+  drillLevel = 'year';
+  drillContext = {};
+  hourlyTemps = new Map();
+  weatherLocation = null;
   if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
   dropzone.style.display = '';
   statsEl.style.display = 'none';
   statsEl.innerHTML = '';
   controlsEl.style.display = 'none';
+  breadcrumbEl.style.display = 'none';
+  breadcrumbEl.innerHTML = '';
   chartPanel.style.display = 'none';
+  chartLegendEl.style.display = 'none';
+  weatherPanelEl.style.display = 'none';
   tablePanelEl.style.display = 'none';
   tableBody.innerHTML = '';
+  yearSelectEl.innerHTML = '';
+  postalInputEl.value = '';
+  setWeatherStatus('Enter a postal code to overlay temperature data.');
+  if (legendTempEl) legendTempEl.style.display = 'none';
   fileInput.value = '';
   hideNotice();
 }
